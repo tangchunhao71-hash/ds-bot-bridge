@@ -34,7 +34,7 @@
     "scripts/bridge.mjs": "a08f69446a16da34f7814df40f904032c83fef5b7b13844bbd2f41506be1ae92",
     "scripts/ds-bot.ps1": "0a55008488c01e55cf9627889a8a759cef0ec5cfeec71bd35a7f1d7641c006e1",
     "tests/activate.test.mjs": "338c99edce74ee19d05940aeffdc4fdf0f0c8994f66d04f496233127ccc75e3a",
-    "tests/activation-files.test.mjs": "faece41b4ce8f42c8eedb1d9893555d32afff903ef78143523cb67f7d43e9e31",
+    "tests/activation-files.test.mjs": "1941ae60ecdfcae9e053d9f044ceadd45f7d8657deb3564f8a066c620bdba402",
     "tests/bridge.test.mjs": "663cf3d1db40a7752b6a361f29eee49325b15a0f8b33737c4c510588cf4923dd",
     "tests/cli-transport.test.mjs": "641b3243323f5f7ee32c89cabc54a1f1a3756ec1d235e7270a1a8c609c5214a8",
     "tests/export-package.test.mjs": "5a66e13fcac87f79ce5e62342af580e6e3b0a8bbc47da50f4be7c42ec64f51cd",

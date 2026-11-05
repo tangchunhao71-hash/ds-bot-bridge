@@ -45,6 +45,12 @@ test('atomic replacement preserves inherited ACL semantics across a private stag
   const originalAcl = securityDescriptor(fixture, pwsh);
   const staging = path.join(base, 'private-backup');
   privateDirectory(staging, pwsh);
-  atomicWrite(fixture, Buffer.from('SYNTHETIC REPLACEMENT\n'), { stagingDirectory: staging, sddl: originalAcl, pwsh });
+  try {
+    atomicWrite(fixture, Buffer.from('SYNTHETIC REPLACEMENT\n'), { stagingDirectory: staging, sddl: originalAcl, pwsh });
+  } catch (error) {
+    // Only this synthetic temporary file's descriptor; no profile or credential.
+    t.diagnostic(JSON.stringify({ originalFixtureAcl: originalAcl, afterFixtureAcl: securityDescriptor(fixture, pwsh) }));
+    throw error;
+  }
   assert.equal(securityDescriptor(fixture, pwsh), originalAcl);
 });
