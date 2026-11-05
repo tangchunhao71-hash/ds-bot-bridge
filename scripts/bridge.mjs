@@ -73,7 +73,7 @@ export function loadBuild() {
   for (const file of BRIDGE_FILES) if (!build.files['assets/bridge/' + file]) stop('BUILD_INCOMPLETE');
   return build;
 }
-function pwshPath() {
+export function pwshPath() {
   const candidates = [
     path.join(process.env.USERPROFILE || '', '.cache', 'codex-runtimes', 'codex-primary-runtime', 'dependencies', 'native', 'powershell', 'pwsh.exe'),
     path.join(process.env.ProgramFiles || 'C:\\Program Files', 'PowerShell', '7', 'pwsh.exe'),

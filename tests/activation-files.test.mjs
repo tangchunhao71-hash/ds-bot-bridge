@@ -6,9 +6,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { atomicWrite, privateDirectory, securityDescriptor, setSecurityDescriptor } from '../scripts/bridge.mjs';
+import { atomicWrite, privateDirectory, securityDescriptor, setSecurityDescriptor, pwshPath } from '../scripts/bridge.mjs';
 
-const pwsh = path.join(os.homedir(), '.cache', 'codex-runtimes', 'codex-primary-runtime', 'dependencies', 'native', 'powershell', 'pwsh.exe');
+const pwsh = process.platform === 'win32' ? pwshPath() : null;
 test('Windows atomic patch writes preserve a narrower file ACL and exact rollback bytes', { skip: process.platform !== 'win32' }, t => {
   assert.ok(fs.existsSync(pwsh), 'Existing PowerShell 7 is required for this fixture');
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'ds-dot-activation-files-'));
