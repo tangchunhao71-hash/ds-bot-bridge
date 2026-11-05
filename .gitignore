@@ -1,0 +1,14 @@
+.env
+.env.*
+.credentials*
+secrets.json
+policy.json
+endpoint.json
+activation.complete.json
+node_modules/
+audit/
+dist/
+activation-backups/
+server-receipts/
+client-receipts/
+*.tmp

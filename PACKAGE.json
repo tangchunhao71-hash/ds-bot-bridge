@@ -1,0 +1,22 @@
+{
+  "name": "ds-bot-bridge",
+  "version": "0.2.0",
+  "cliCoreVersion": "0.2.0-candidate.1",
+  "platform": "Windows",
+  "requires": {
+    "node": ">=24",
+    "powershell": ">=7",
+    "existingDsBot": "0.2.7",
+    "dsh": "0.2.1-rc.5",
+    "loader": "1.0.6"
+  },
+  "activation": "explicitly approved local plan only; no automatic installation",
+  "defaultAllowedBotIds": [],
+  "shipsInstanceState": false,
+  "shipsCredentials": false,
+  "shipsVendorBrowserClient": false,
+  "browserClientSource": "Extracted and hash-verified from the recipient's already installed app.asar only at approved activation",
+  "license": "MIT",
+  "repository": "https://github.com/tangchunhao71-hash/ds-bot-bridge",
+  "contributionPolicy": "collaborators_only"
+}

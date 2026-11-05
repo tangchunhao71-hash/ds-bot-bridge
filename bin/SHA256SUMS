@@ -1,0 +1,4 @@
+1b6c1e909850cc11c9cfbdbc8308e9d35f6790ed00b6716db3c51f9ce3cabc7f  bin/ds-bot.mjs
+cddfd423316425e3fb3bbe54f6fbee7a6822c62d646aaf722281220709aaa206  lib/cli-transport.mjs
+5416bcc8a2aa84185dcff4fc05cd7e8517a2644cc499c1093796655d38b7c5ea  lib/pipe-client.mjs
+5d822b8e14886dd5ddebcfc279fba622c1dd7e7921c00f795fc6053763d599cc  lib/send-protocol.mjs

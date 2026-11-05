@@ -1,0 +1,31 @@
+{
+  "name": "ds-bot",
+  "version": "0.2.7-dot-bridge.1",
+  "private": true,
+  "type": "module",
+  "description": "MIT-licensed local compatibility host; extracted DS Bot browser client retains its upstream Apache-2.0 license. See THIRD_PARTY_NOTICES.md.",
+  "license": "MIT",
+  "engines": {
+    "dsh": "0.2.1-rc.5"
+  },
+  "exports": {
+    ".": "./runtime-wrapper.mjs",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "deep-view": "0.1.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-llm": "*",
+    "@deepseek-ai/dsh-scope": "*",
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/dsh-web": "*"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web"
+    }
+  }
+}
