@@ -1,0 +1,2 @@
+# Integrity manifests and pinned sources require byte-exact checkouts.
+* -text

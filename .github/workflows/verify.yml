@@ -18,6 +18,11 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24'
+      - name: Show checkout byte policy
+        shell: pwsh
+        run: |
+          git config --show-origin --get core.autocrlf
+          git check-attr text -- SKILL.md scripts/bridge.mjs
       - name: Verify package integrity
         shell: pwsh
         run: node scripts/bridge.mjs verify

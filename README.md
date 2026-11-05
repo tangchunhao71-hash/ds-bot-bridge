@@ -64,6 +64,8 @@ node --test --test-concurrency=1 @tests
 
 相关测试使用合成元数据、内存状态和受保护的临时文件，不发送真实消息，不创建 Bot 实例。Windows CI 对源文件清单、协议、安装参数、回退边界、权限保留和 CLI 启动做检查。真实接入仍需核验原实例、版本、界面和指定会话；测试不能替代接入批准。历史验证及适用范围见 [来源与验证](references/provenance-and-validation.md)。
 
+仓库通过 `.gitattributes` 保留文件原始字节，避免 Windows Git 的换行转换破坏固定哈希。校验失败时先检查实际差异，不通过重写清单绕过校验。
+
 ## 许可证与维护
 
 本项目原创桥接代码和文档采用 [MIT License](LICENSE)。DS Bot 及其资源保留原许可证，见 [第三方来源说明](THIRD_PARTY_NOTICES.md)。DS Bot 浏览器资源不在源码或 ZIP 中；获批安装时从接收方已有安装中提取，并验证固定哈希。
