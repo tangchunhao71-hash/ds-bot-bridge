@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { atomicWrite, privateDirectory, securityDescriptor, setSecurityDescriptor, pwshPath } from '../scripts/bridge.mjs';
+import { atomicWrite, privateDirectory, securityDescriptor, setSecurityDescriptor, pwshPath, permissionsPreserved } from '../scripts/bridge.mjs';
 
 const pwsh = process.platform === 'win32' ? pwshPath() : null;
 test('Windows atomic patch writes preserve a narrower file ACL and exact rollback bytes', { skip: process.platform !== 'win32' }, t => {
@@ -26,11 +26,11 @@ test('Windows atomic patch writes preserve a narrower file ACL and exact rollbac
   const staging = path.join(base, 'private-backup');
   privateDirectory(staging, pwsh);
   atomicWrite(fixture, Buffer.from('SYNTHETIC ACTIVATED\n'), { stagingDirectory: staging, sddl, pwsh });
-  assert.equal(securityDescriptor(fixture, pwsh), sddl);
+  assert.equal(permissionsPreserved(sddl, securityDescriptor(fixture, pwsh)), true);
   assert.equal(fs.readFileSync(fixture, 'utf8'), 'SYNTHETIC ACTIVATED\n');
   atomicWrite(fixture, bytes, { stagingDirectory: staging, sddl, pwsh });
   assert.deepEqual(fs.readFileSync(fixture), bytes);
-  assert.equal(securityDescriptor(fixture, pwsh), sddl);
+  assert.equal(permissionsPreserved(sddl, securityDescriptor(fixture, pwsh)), true);
   const backups = fs.readdirSync(staging);
   assert.equal(backups.length, 2);
   assert.ok(backups.every(name => name.startsWith('synthetic.patch.yml.native-original-') && name.endsWith('.bin')));
@@ -52,5 +52,5 @@ test('atomic replacement preserves inherited ACL semantics across a private stag
     t.diagnostic(JSON.stringify({ originalFixtureAcl: originalAcl, afterFixtureAcl: securityDescriptor(fixture, pwsh) }));
     throw error;
   }
-  assert.equal(securityDescriptor(fixture, pwsh), originalAcl);
+  assert.equal(permissionsPreserved(originalAcl, securityDescriptor(fixture, pwsh)), true);
 });

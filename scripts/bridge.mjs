@@ -93,6 +93,19 @@ export function securityDescriptor(file, pwsh) {
   const command = PS_UTF8 + '$dsDotAclFile=([Console]::In.ReadToEnd() | ConvertFrom-Json); (Get-Acl -LiteralPath $dsDotAclFile -ErrorAction Stop).Sddl | ConvertTo-Json -Compress';
   return JSON.parse(execFileSync(pwsh, ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(command, 'utf16le').toString('base64')], { input: JSON.stringify(file), encoding: 'utf8', windowsHide: true, timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }));
 }
+export function permissionsPreserved(expected, actual) {
+  if (typeof expected !== 'string' || !expected || typeof actual !== 'string' || !actual) return false;
+  if (actual === expected) return true;
+  // NTFS may add SE_DACL_AUTO_INHERITED after replacing a regular file.
+  // Accept only that one-way addition, with identical owner, group, all ACEs,
+  // SACL and P/AR flags. Never normalize ACE flags or a null/absent DACL.
+  const header = /^((?:(?:O|G):(?:S-\d+(?:-\d+)+|[A-Z]{2}))*)D:((?:P|AI|AR)*)\(/;
+  const before = expected.match(header);
+  const after = actual.match(header);
+  if (!before || !after || before[1] !== after[1] || before[2].includes('AI') || !after[2].includes('AI')) return false;
+  return after[2].replace('AI', '') === before[2] &&
+    actual.slice(after[0].length) === expected.slice(before[0].length);
+}
 export function setSecurityDescriptor(file, sddl, pwsh) {
   const command = PS_UTF8 + '$dsDotAclInput=([Console]::In.ReadToEnd() | ConvertFrom-Json);$dsDotAcl=[System.Security.AccessControl.FileSecurity]::new();$dsDotAcl.SetSecurityDescriptorSddlForm($dsDotAclInput.sddl,([System.Security.AccessControl.AccessControlSections]::Access -bor [System.Security.AccessControl.AccessControlSections]::Owner -bor [System.Security.AccessControl.AccessControlSections]::Group));Set-Acl -LiteralPath $dsDotAclInput.file -AclObject $dsDotAcl -ErrorAction Stop';
   execFileSync(pwsh, ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(command, 'utf16le').toString('base64')], { input: JSON.stringify({ file, sddl }), encoding: 'utf8', windowsHide: true, timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] });
@@ -155,7 +168,7 @@ export function atomicWrite(file, bytes, { stagingDirectory = path.dirname(file)
   const fd = fs.openSync(temporary, 'wx', 0o600);
   try { fs.writeFileSync(fd, bytes); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
   if (sddl) {
-    if (securityDescriptor(file, pwsh) !== sddl) stop('PROFILE_PERMISSIONS_CHANGED');
+    if (!permissionsPreserved(sddl, securityDescriptor(file, pwsh))) stop('PROFILE_PERMISSIONS_CHANGED');
     // Windows ReplaceFile preserves the destination DACL and metadata, including
     // inherited ACL semantics. Do not use ignoreMetadataErrors or copy an ACL
     // in a different parent. Retain the native backup for partial OS failures.
@@ -163,10 +176,10 @@ export function atomicWrite(file, bytes, { stagingDirectory = path.dirname(file)
     const command = PS_UTF8 + '$dsDotReplace=([Console]::In.ReadToEnd() | ConvertFrom-Json);[System.IO.File]::Replace($dsDotReplace.temporary,$dsDotReplace.file,$dsDotReplace.backup,$false)';
     execFileSync(pwsh, ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(command, 'utf16le').toString('base64')], { input: JSON.stringify({ temporary, file, backup: nativeBackup }), windowsHide: true, encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] });
     // Inherited ACEs can be recalculated from the replacement's old parent.
-    // Restore the original descriptor at the final path if needed; the staging
-    // ACL was current-user-only, so this transition does not widen access.
-    if (securityDescriptor(file, pwsh) !== sddl) setSecurityDescriptor(file, sddl, pwsh);
-    if (securityDescriptor(file, pwsh) !== sddl) stop('PATCH_PERMISSIONS_NOT_PRESERVED');
+    // Restore permission-bearing fields at the final path if needed; the
+    // staging ACL was private. Only the OS's one-way AI normalization is allowed.
+    if (!permissionsPreserved(sddl, securityDescriptor(file, pwsh))) setSecurityDescriptor(file, sddl, pwsh);
+    if (!permissionsPreserved(sddl, securityDescriptor(file, pwsh))) stop('PATCH_PERMISSIONS_NOT_PRESERVED');
   } else {
     fs.renameSync(temporary, file);
   }
@@ -235,7 +248,7 @@ export function rollback(backupId) {
   const isOriginal = actualHash === plan.originalPatchHash && patchExists === plan.originalPatchExists;
   const isActivated = patchExists && (actualHash === plan.resultingPatchHash || isManagedPatch(original, actual, plan.pluginDirectory));
   if (!isOriginal && !isActivated) stop('PROFILE_CHANGED_SINCE_ACTIVATION');
-  if (plan.originalPatchExists && sha(securityDescriptor(plan.patch, plan.policy.pwshPath)) !== plan.originalPatchAclHash) stop('PROFILE_PERMISSIONS_CHANGED');
+  if (plan.originalPatchExists && !permissionsPreserved(meta.originalPatchSddl, securityDescriptor(plan.patch, plan.policy.pwshPath))) stop('PROFILE_PERMISSIONS_CHANGED');
   if (isActivated) {
     if (plan.originalPatchExists) atomicWrite(plan.patch, original, { stagingDirectory: backup, sddl: meta.originalPatchSddl, pwsh: plan.policy.pwshPath });
     else fs.unlinkSync(plan.patch);

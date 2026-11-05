@@ -47,6 +47,8 @@ node '<本 Skill 目录>\scripts\bridge.mjs' rollback '<本机启用时返回的
 
 回退恢复原补丁字节和权限，将禁用插件保留到私有备份，保留全部收据与未知发送记录。它不结束或启动应用，不降级 Skill、不清日志、不重放消息。成功后再正常启动原 DS Bot。
 
+权限检查保留原始描述作为备份，严格比较所有者、组、每条权限、继承保护及其他标志。只允许 Windows 在文件替换后单向新增自动继承状态标记 `AI`；删除 `AI`、改变 `P`／`AR` 或任何权限条目均不接受。该边界有正反例及 Windows 原生文件测试，见 [Microsoft 控制标志定义](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptor-control)。
+
 ## 常见阻断
 
 | 状态／错误 | 应对 |

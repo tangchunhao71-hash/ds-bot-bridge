@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { patchFragment, patchedBytes } from '../scripts/bridge.mjs';
+import { patchFragment, patchedBytes, permissionsPreserved } from '../scripts/bridge.mjs';
 
 function directory(t) {
   const base = path.resolve(os.tmpdir());
@@ -88,4 +88,25 @@ test('a generated patch cannot be appended twice', t => {
   const root = directory(t);
   const first = patchedBytes(Buffer.from('# synthetic\n'), root);
   assert.throws(() => patchedBytes(first, root), { code: 'PROFILE_PATCH_UNSUPPORTED' });
+});
+
+test('permission preservation accepts only the OS one-way AI marker addition', () => {
+  const original = 'O:BAG:S-1-5-21-100-200-300-513D:(A;ID;FA;;;SY)(A;ID;FA;;;BA)S:(ML;;NW;;;ME)';
+  const normalized = original.replace('D:(', 'D:AI(');
+  assert.equal(permissionsPreserved(original, original), true);
+  assert.equal(permissionsPreserved(original, normalized), true);
+  assert.equal(permissionsPreserved(normalized, original), false, 'Loss of AI is not a normalization');
+  for (const changed of [
+    normalized.replace('O:BA', 'O:SY'),
+    normalized.replace('-513D:', '-514D:'),
+    normalized.replace('D:AI(', 'D:PAI('),
+    normalized.replace('D:AI(', 'D:ARAI('),
+    normalized.replace('(A;ID;FA;;;SY)', '(A;ID;FR;;;SY)'),
+    normalized.replace('(A;ID;FA;;;SY)', '(A;;FA;;;SY)'),
+    normalized.replace('(A;ID;FA;;;SY)', '(D;ID;FA;;;SY)'),
+    normalized.replace(';;;ME)', ';;;LW)'),
+    normalized.replace('D:AI', 'D:NO_ACCESS_CONTROL'),
+  ]) assert.equal(permissionsPreserved(original, changed), false);
+  assert.equal(permissionsPreserved(undefined, undefined), false);
+  assert.equal(permissionsPreserved('S:(XA;;FA;;;SY;("D:AI("))', 'S:(XA;;FA;;;SY;("D:("))'), false);
 });
